@@ -1,0 +1,12 @@
+@"
+pandas
+numpy
+matplotlib
+seaborn
+pymc
+arviz
+statsmodels
+flask
+flask-cors
+jupyter
+"@ | Out-File -FilePath requirements.txt -Encoding utf8
