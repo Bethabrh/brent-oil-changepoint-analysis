@@ -34,7 +34,8 @@ brent-oil-changepoint-analysis/
 ├── scripts/
 │   └── README.md               # Reusable data loading/cleaning scripts (in progress)
 ├── src/
-│   └── init.py             # Core analysis modules (in progress)
+│   ├── init.py
+│   └── data_utils.py           # Reusable data loading/cleaning/feature functions
 ├── tests/
 │   └── init.py             # Unit tests
 ├── .gitignore
@@ -80,7 +81,7 @@ The raw price CSV is excluded from version control via `.gitignore`; only the cu
 
 ### 1. Analysis Steps
 
-1. **Data Loading & Cleaning** — Load the Brent oil price dataset, parse the `Date` column to datetime, sort chronologically, and check for missing values or duplicate dates.
+1. **Data Loading & Cleaning** — Load the Brent oil price dataset, parse the `Date` column to datetime, sort chronologically, and check for missing values or duplicate dates. (Implemented as reusable, error-handled functions in `src/data_utils.py`.)
 2. **Exploratory Data Analysis (EDA)** — Visualize the raw price trend to identify major shocks and regime shifts. Compute log returns (`log(price_t) - log(price_{t-1})`) to obtain a series better suited to statistical modeling.
 3. **Stationarity Testing** — Run Augmented Dickey-Fuller (ADF) tests on both raw prices and log returns to formally confirm which series is stationary and should be used for downstream modeling.
 4. **Volatility Analysis** — Compute rolling standard deviation of log returns to visualize volatility clustering and identify high-volatility periods.
@@ -100,36 +101,57 @@ Events were compiled from major, verifiable oil-market shocks spanning the datas
 - **Volatility**: A 30-day rolling standard deviation of log returns shows clear volatility clustering, with the most extreme spike occurring in 2020 (COVID-19 demand collapse and Saudi-Russia price war), exceeding even the 2008 Financial Crisis and 1990-91 Gulf War volatility.
 - **Modeling implication**: Because raw prices are non-stationary, change point modeling in Task 2 will primarily be applied to log returns (or with a model structure appropriate for a trending series), since standard Bayesian change point detection assumes a reasonably well-behaved data-generating process for pre/post-change parameters to be meaningfully estimated.
 
-### 4. Change Point Models: Purpose & Expected Outputs
-
-Change point models identify points in time where the statistical properties of a series (e.g., mean, variance) shift abruptly, signaling a structural break rather than gradual drift. In this project, a Bayesian change point model (via PyMC) will treat the switch point (tau) as a random variable with a discrete uniform prior over the time index, define separate "before" and "after" parameters (e.g., two means, μ₁ and μ₂), and use MCMC sampling to estimate the posterior distribution of tau and the before/after parameters jointly.
-
-**Expected outputs:**
-- A posterior distribution over the most probable change point date(s) — a sharp, narrow peak indicates high confidence in a specific date.
-- Posterior distributions for the "before" and "after" parameters, enabling probabilistic statements (e.g., "there is a 95% probability the mean price increased by at least $X after the change point").
-- Convergence diagnostics (r_hat, trace plots) to validate the sampling process.
-
-**Limitations:** the model identifies *when* a structural break occurred and *how large* it was, but does not itself prove *why* it occurred — causal attribution to a specific event requires separately comparing detected dates against the researched events timeline, and even a close temporal match does not constitute proof of causation.
-
-### 5. Assumptions & Limitations
-
-**Assumptions:**
-- Daily closing prices are representative of true market conditions (no missing-data bias in the source dataset).
-- A single/few discrete change points is a reasonable simplification of what is, in reality, continuous and multi-causal price formation.
-- Events researched are treated as candidate explanations for detected change points, not confirmed causes.
-
-**Limitations:**
-- **Correlation vs. causation**: A change point occurring near the date of a known event is a temporal correlation, not proof that the event *caused* the shift. Oil prices are influenced by many simultaneous factors (macroeconomic conditions, currency fluctuations, speculative trading, inventory levels), and multiple candidate events often cluster near any given date, making single-cause attribution inherently uncertain.
-- The model assumes a fixed number of change points (often just one in a simple implementation); real markets may have many overlapping regime shifts.
-- Historical events data was manually curated and may not be exhaustive — smaller or regional events that nonetheless moved prices may be omitted.
-- Bayesian change point detection identifies statistical breaks in the modeled series (e.g., log returns) — interpretation in terms of raw price levels requires care.
-
-### 6. Communication Channels
+### 4. Communication Channels
 
 Findings will be communicated via:
 - A written analytical report (blog-post format suitable for Medium, or PDF) summarizing methodology, visualizations, and quantified impact statements — targeted at investors, policymakers, and energy company stakeholders.
 - An interactive dashboard (Flask backend + React frontend) allowing stakeholders to explore historical trends, filter by date range, and see event-price correlations directly.
 - Regular GitHub commits and issue tracking for technical transparency and reproducibility.
+
+---
+
+## Bayesian Change Point Models: Concepts, Outputs, and Limitations
+
+### Why Use a Change Point Model?
+
+Oil prices don't drift randomly and smoothly — they tend to hold a relatively stable behavior for a period, then shift abruptly in response to a shock (a war breaking out, an OPEC decision, a financial crisis). A change point model is built specifically to detect **when** that shift happened and **how large** it was, rather than just describing an overall trend line. This makes it well suited to a market like oil, where the interesting signal is the structural break itself, not the average behavior across the whole history.
+
+### How the Model Works (Conceptually)
+
+1. **Switch point (τ)**: treated as an unknown parameter with a prior distribution over all possible time indices in the dataset — the model doesn't assume where the break is in advance, it learns it from the data.
+2. **Before/after parameters**: two sets of parameters (e.g., mean μ₁ before τ, mean μ₂ after τ) describe the data's behavior in each regime.
+3. **Switch function**: at each time step, the model selects μ₁ or μ₂ depending on whether that time point falls before or after τ.
+4. **Likelihood**: observed prices (or log returns) are modeled as noisy draws around whichever mean is currently active.
+5. **MCMC sampling**: rather than returning a single "best guess," Bayesian inference (via MCMC) returns full posterior *distributions* over τ, μ₁, and μ₂ — capturing our uncertainty, not just a point estimate.
+
+### Expected Outputs
+
+- **Posterior distribution of τ**: shows which date(s) are most probable as the true change point. A narrow, sharp peak means high confidence in a specific date; a wide, flat posterior means the data doesn't clearly support one location over another.
+- **Posterior distributions of regime parameters (μ₁, μ₂, or variances)**: allow probabilistic statements like "there is a 95% probability the mean log-return shifted by at least X after the change point," rather than a single deterministic number.
+- **Convergence diagnostics** (r_hat ≈ 1.0, healthy trace plots): confirm the MCMC sampler actually explored the posterior properly and the results can be trusted.
+
+### Limitations of the Approach
+
+- The model tells us **when** and **how large** a shift was — it does **not** by itself tell us **why**. Attributing a detected change point to a specific real-world event is a separate, interpretive step done by comparing dates, not something the statistical model proves.
+- Simple change point models assume a small, fixed number of breaks (often just one). Real oil markets likely have many overlapping regime shifts, so this is a simplification.
+- Results are sensitive which series is modeled (raw price vs. log returns) and the choice of prior for τ.
+
+---
+
+## Assumptions and Limitations
+
+### Assumptions
+
+- Daily closing prices in the source dataset are treated as representative and accurate; no adjustment is made for potential data-collection anomalies.
+- Modeling a small number of discrete change points is treated as a reasonable simplification of what is, in reality, a continuous and multi-causal price-formation process.
+- Events in `data/events.csv` are treated only as **candidate explanations** for detected change points — their presence near a date is not treated as proof of impact.
+
+### Limitations
+
+- **Correlation vs. causal impact (critical distinction)**: If a detected change point falls close in time to a known event (e.g., an OPEC announcement), that is a **temporal correlation** — evidence *consistent with* a causal link, but not proof of one. Oil prices are driven by many simultaneous factors — macroeconomic conditions, currency movements, speculative trading positions, inventory data, weather, and multiple overlapping geopolitical events — so a single nearby event is rarely the sole or fully verified cause of a price shift. Establishing actual causation would require a counterfactual analysis (what would have happened without the event) that is outside the scope of this project; this analysis instead reports **statistically detected structural breaks** and **plausible associated events**, explicitly stopping short of causal claims.
+- The events dataset was manually curated from major, well-documented events and is not exhaustive — smaller or more localized events that nonetheless moved prices may be omitted.
+- A basic change point model assumes only one (or a small fixed number of) breaks; it may miss more gradual regime changes or fail to separate multiple closely-spaced shocks.
+- Findings are based on historical data only and are not intended as a predictive trading signal.
 
 ---
 
