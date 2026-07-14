@@ -1,0 +1,54 @@
+{
+  "changepoints": [
+    {
+      "label": "Gulf War",
+      "detected_date": "1990-11-27",
+      "price_before": 31.85,
+      "price_after": 31.21,
+      "pct_change": -2.0,
+      "matched_event": "Gulf War / Operation Desert Storm Begins",
+      "matched_event_date": "1991-01-17",
+      "days_offset": 51
+    },
+    {
+      "label": "Global Financial Crisis",
+      "detected_date": "2008-07-08",
+      "price_before": 138.16,
+      "price_after": 135.21,
+      "pct_change": -2.13,
+      "matched_event": "Oil Price Peaks at Record High (~$147/barrel)",
+      "matched_event_date": "2008-07-11",
+      "days_offset": 3
+    },
+    {
+      "label": "2014 OPEC Non-Cut",
+      "detected_date": "2014-11-19",
+      "price_before": 80.18,
+      "price_after": 75.27,
+      "pct_change": -6.12,
+      "matched_event": "OPEC Declines to Cut Production",
+      "matched_event_date": "2014-11-27",
+      "days_offset": 8
+    },
+    {
+      "label": "COVID / Price War",
+      "detected_date": "2020-04-01",
+      "price_before": 22.62,
+      "price_after": 20.99,
+      "pct_change": -7.19,
+      "matched_event": "WTI Futures Turn Negative / OPEC+ Record Cut",
+      "matched_event_date": "2020-04-20",
+      "days_offset": 19
+    },
+    {
+      "label": "Russia-Ukraine War",
+      "detected_date": "2022-03-21",
+      "price_before": 115.94,
+      "price_after": 117.43,
+      "pct_change": 1.29,
+      "matched_event": "Russian Invasion of Ukraine",
+      "matched_event_date": "2022-02-24",
+      "days_offset": 25
+    }
+  ]
+}
