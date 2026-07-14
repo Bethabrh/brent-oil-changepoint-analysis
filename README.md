@@ -154,6 +154,67 @@ Oil prices don't drift randomly and smoothly — they tend to hold a relatively 
 - Findings are based on historical data only and are not intended as a predictive trading signal.
 
 ---
+## Task 2: Bayesian Change Point Modeling — Results
+
+A single change-point model applied across the full 1987–2022 series proved statistically underdetermined (multiple comparably large shocks caused a multimodal posterior over tau, with elevated r-hat and divergences). To resolve this, the same model was applied to focused time windows around five major candidate events, each converging cleanly:
+
+| Event Window | Detected Change Point | Matched Event (events.csv) | Price Impact |
+|---|---|---|---|
+| Gulf War | 1990-11-27 | Gulf War / Operation Desert Storm Begins (51d offset) | $31.85 → $31.21 (−2.0%) |
+| Global Financial Crisis | 2008-07-08 | Oil Price Peaks at Record High (3d offset) | $138.16 → $135.21 (−2.1%) |
+| 2014 OPEC Non-Cut | 2014-11-19 | OPEC Declines to Cut Production (8d offset) | $80.18 → $75.27 (−6.1%) |
+| COVID / Price War | 2020-04-01 | WTI Futures Turn Negative / OPEC+ Record Cut (19d offset) | $22.62 → $20.99 (−7.2%) |
+| Russia-Ukraine War | 2022-03-21 | Russian Invasion of Ukraine (25d offset) | $115.94 → $117.43 (+1.3%) |
+
+All windowed models achieved acceptable convergence (r_hat ≤ 1.10, no unresolved divergences after tuning adjustments). Full methodology, trace plots, and posterior visualizations are in `notebooks/02_change_point_model.ipynb`.
+
+**Key limitation discovered:** a single-change-point Bayesian model is well-suited to a *single, dominant* shock in a bounded window, but becomes statistically unstable across a 35-year span containing multiple comparably large shocks. Windowed detection is an effective mitigation and produces cleanly converged, event-aligned results, though it requires the analyst to pre-select candidate windows rather than fully automated discovery. A production version would extend to a proper multi-change-point or regime-switching model (see Advanced Extensions).
+
+## Task 3: Interactive Dashboard
+
+A full-stack dashboard visualizes the analysis results.
+
+### Backend (Flask)
+
+Located in `backend/app.py`. Endpoints:
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/health` | Health check |
+| `GET /api/prices` | Historical price data (optional `start_date`/`end_date` query params) |
+| `GET /api/changepoints` | Detected change points with quantified impact and matched events |
+| `GET /api/events` | Full curated events dataset |
+| `GET /api/summary` | Combined summary for dashboard overview |
+
+**Run it:**
+```bash
+cd backend
+pip install flask flask-cors
+python app.py
+```
+Runs on `http://127.0.0.1:5001`.
+
+### Frontend (React + Vite)
+
+Located in `frontend/`. Built with React, Recharts for visualization, and a custom dark energy-industry themed UI.
+
+**Run it:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Runs on `http://localhost:5173`.
+
+**Features:**
+- Interactive price chart with change point markers
+- Clickable change point cards showing quantified before/after impact
+- Full sortable events timeline
+- Responsive layout
+
+### Screenshots
+
+See `screenshots/` folder for dashboard views.
 
 ## Roadmap
 
