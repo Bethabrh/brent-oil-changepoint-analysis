@@ -6,7 +6,7 @@ Analyzing the impact of major political and economic events on Brent crude oil p
 **Program:** Birhan Energies Data Science Challenge
 
 ---
-
+![Tests](https://github.com/Bethabrh/brent-oil-changepoint-analysis/actions/workflows/unittests.yml/badge.svg) 
 ## Project Overview
 
 Brent crude oil prices are highly volatile and sensitive to geopolitical conflicts, OPEC policy decisions, economic shocks, and sanctions. This project analyzes over three decades of daily Brent oil price data (May 1987–September 2022) to:
