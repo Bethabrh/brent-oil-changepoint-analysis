@@ -3,43 +3,44 @@ Flask backend for the Brent Oil Change Point Analysis dashboard.
 Serves historical price data, change point model results, and event data.
 """
 
-from flask import Flask, jsonify, request
+from typing import Any, Dict, List, Optional
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS
 import json
 import os
 import csv
 
-app = Flask(__name__)
+app: Flask = Flask(__name__)
 CORS(app)
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), '..', 'data')
+DATA_DIR: str = os.path.join(os.path.dirname(__file__), '..', 'data')
 
 
-def load_json(filename):
-    filepath = os.path.join(DATA_DIR, filename)
+def load_json(filename: str) -> Any:
+    filepath: str = os.path.join(DATA_DIR, filename)
     with open(filepath, 'r') as f:
         return json.load(f)
 
 
 @app.route('/api/health', methods=['GET'])
-def health_check():
+def health_check() -> Response:
     """Simple health check endpoint."""
     return jsonify({"status": "ok", "message": "Brent Oil Analysis API is running"})
 
 
 @app.route('/api/prices', methods=['GET'])
-def get_prices():
+def get_prices() -> Response:
     """
     Return historical price data.
     Optional query params: start_date, end_date (YYYY-MM-DD format)
     """
     try:
-        prices = load_json('prices.json')
+        prices: List[Dict[str, Any]] = load_json('prices.json')
     except FileNotFoundError:
         return jsonify({"error": "Price data not found. Run the EDA notebook to generate data/prices.json"}), 404
 
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
+    start_date: Optional[str] = request.args.get('start_date')
+    end_date: Optional[str] = request.args.get('end_date')
 
     if start_date:
         prices = [p for p in prices if p['Date'] >= start_date]
@@ -50,10 +51,10 @@ def get_prices():
 
 
 @app.route('/api/changepoints', methods=['GET'])
-def get_changepoints():
+def get_changepoints() -> Response:
     """Return Bayesian change point model results (multi-window detection)."""
     try:
-        results = load_json('model_results.json')
+        results: Dict[str, Any] = load_json('model_results.json')
     except FileNotFoundError:
         return jsonify({"error": "Model results not found. Run notebooks/02_change_point_model.ipynb first"}), 404
 
@@ -61,14 +62,14 @@ def get_changepoints():
 
 
 @app.route('/api/events', methods=['GET'])
-def get_events():
+def get_events() -> Response:
     """Return the curated events dataset."""
-    filepath = os.path.join(DATA_DIR, 'events.csv')
+    filepath: str = os.path.join(DATA_DIR, 'events.csv')
 
     if not os.path.exists(filepath):
         return jsonify({"error": "Events data not found"}), 404
 
-    events = []
+    events: List[Dict[str, str]] = []
     with open(filepath, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -78,15 +79,15 @@ def get_events():
 
 
 @app.route('/api/summary', methods=['GET'])
-def get_summary():
+def get_summary() -> Response:
     """Combined summary endpoint for dashboard overview cards."""
     try:
-        results = load_json('model_results.json')
-        prices = load_json('prices.json')
+        results: Dict[str, Any] = load_json('model_results.json')
+        prices: List[Dict[str, Any]] = load_json('prices.json')
     except FileNotFoundError as e:
         return jsonify({"error": str(e)}), 404
 
-    changepoints = results.get('changepoints', [])
+    changepoints: List[Dict[str, Any]] = results.get('changepoints', [])
 
     return jsonify({
         "date_range": {
