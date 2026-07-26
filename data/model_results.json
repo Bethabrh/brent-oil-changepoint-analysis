@@ -6,6 +6,12 @@
       "price_before": 31.85,
       "price_after": 31.21,
       "pct_change": -2.0,
+      "reliability": {
+        "r_hat_max": 1.01,
+        "ess_bulk_min": 70.0,
+        "ess_tail_min": 155.0,
+        "convergence_status": "good"
+      },
       "matched_event": "Gulf War / Operation Desert Storm Begins",
       "matched_event_date": "1991-01-17",
       "days_offset": 51
@@ -16,6 +22,12 @@
       "price_before": 138.16,
       "price_after": 135.21,
       "pct_change": -2.13,
+      "reliability": {
+        "r_hat_max": 1.03,
+        "ess_bulk_min": 54.0,
+        "ess_tail_min": 95.0,
+        "convergence_status": "acceptable"
+      },
       "matched_event": "Oil Price Peaks at Record High (~$147/barrel)",
       "matched_event_date": "2008-07-11",
       "days_offset": 3
@@ -26,6 +38,12 @@
       "price_before": 80.18,
       "price_after": 75.27,
       "pct_change": -6.12,
+      "reliability": {
+        "r_hat_max": 1.1,
+        "ess_bulk_min": 16.0,
+        "ess_tail_min": 5.0,
+        "convergence_status": "acceptable"
+      },
       "matched_event": "OPEC Declines to Cut Production",
       "matched_event_date": "2014-11-27",
       "days_offset": 8
@@ -36,6 +54,12 @@
       "price_before": 22.62,
       "price_after": 20.99,
       "pct_change": -7.19,
+      "reliability": {
+        "r_hat_max": 1.05,
+        "ess_bulk_min": 37.0,
+        "ess_tail_min": 72.0,
+        "convergence_status": "acceptable"
+      },
       "matched_event": "WTI Futures Turn Negative / OPEC+ Record Cut",
       "matched_event_date": "2020-04-20",
       "days_offset": 19
@@ -46,6 +70,12 @@
       "price_before": 115.94,
       "price_after": 117.43,
       "pct_change": 1.29,
+      "reliability": {
+        "r_hat_max": 1.08,
+        "ess_bulk_min": 62.0,
+        "ess_tail_min": 18.0,
+        "convergence_status": "acceptable"
+      },
       "matched_event": "Russian Invasion of Ukraine",
       "matched_event_date": "2022-02-24",
       "days_offset": 25
