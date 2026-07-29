@@ -132,3 +132,17 @@ class TestSummaryEndpoint:
         data = response.get_json()
         assert data['date_range']['start'] == '1987-05-21'
         assert data['date_range']['end'] == '2022-09-30'
+        class TestReliabilityEndpoint:
+    def test_reliability_returns_200(self, client):
+        response = client.get('/api/reliability')
+        assert response.status_code == 200
+
+    def test_reliability_has_data_for_all_changepoints(self, client):
+        response = client.get('/api/reliability')
+        data = response.get_json()
+        assert len(data['data']) == 5
+
+    def test_reliability_contains_rhat(self, client):
+        response = client.get('/api/reliability')
+        data = response.get_json()
+        assert 'r_hat_max' in data['data'][0]['reliability']

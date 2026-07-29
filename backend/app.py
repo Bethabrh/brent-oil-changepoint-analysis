@@ -106,6 +106,25 @@ def get_summary() -> Response:
         ]
     })
 
+@app.route('/api/reliability', methods=['GET'])
+def get_reliability() -> Response:
+    """Return convergence diagnostics (r-hat, ESS) for each detected change point."""
+    try:
+        results: Dict[str, Any] = load_json('model_results.json')
+    except FileNotFoundError:
+        return jsonify({"error": "Model results not found"}), 404
 
+    changepoints: List[Dict[str, Any]] = results.get('changepoints', [])
+
+    reliability_data = [
+        {
+            "label": cp["label"],
+            "detected_date": cp["detected_date"],
+            "reliability": cp.get("reliability", {})
+        }
+        for cp in changepoints
+    ]
+
+    return jsonify({"data": reliability_data})
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
