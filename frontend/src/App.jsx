@@ -50,10 +50,33 @@ function ChangePointCard({ cp, isActive, onClick }) {
 }
 
 export default function App() {
+  function ReliabilityBadge({ item }) {
+  const status = item.reliability?.status || 'unknown';
+  const color = status === 'good' ? 'var(--green)'
+    : status === 'acceptable' ? '#D9A441'
+    : 'var(--rust)';
+  return (
+    <div className="cp-card" style={{ borderColor: color }}>
+      <div className="cp-card__gauge" style={{ borderColor: color }}>
+        <span className="cp-card__pct" style={{ color, fontSize: '0.75rem' }}>
+          {status.toUpperCase()}
+        </span>
+      </div>
+      <div className="cp-card__body">
+        <span className="cp-card__label">{item.label}</span>
+        <span className="cp-card__date">{formatDate(item.detected_date)}</span>
+        <span className="cp-card__price">
+          r&#770; max: {item.reliability?.r_hat_max ?? 'N/A'} &middot; ESS min: {item.reliability?.ess_bulk_min ?? 'N/A'}
+        </span>
+      </div>
+    </div>
+  );
+}
   const [prices, setPrices] = useState([]);
   const [changepoints, setChangepoints] = useState([]);
   const [events, setEvents] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [reliability, setReliability] = useState([]);
   const [activeCp, setActiveCp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,14 +84,15 @@ export default function App() {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [pricesRes, cpRes, eventsRes, summaryRes] = await Promise.all([
+       const [pricesRes, cpRes, eventsRes, summaryRes, reliabilityRes] = await Promise.all([
           fetch(`${API_BASE}/prices`),
           fetch(`${API_BASE}/changepoints`),
           fetch(`${API_BASE}/events`),
           fetch(`${API_BASE}/summary`),
+          fetch(`${API_BASE}/reliability`),
         ]);
 
-        if (!pricesRes.ok || !cpRes.ok || !eventsRes.ok || !summaryRes.ok) {
+        if (!pricesRes.ok || !cpRes.ok || !eventsRes.ok || !summaryRes.ok || !reliabilityRes.ok) {
           throw new Error('One or more API endpoints failed to respond.');
         }
 
@@ -76,14 +100,15 @@ export default function App() {
         const cpData = await cpRes.json();
         const eventsData = await eventsRes.json();
         const summaryData = await summaryRes.json();
-
+        const reliabilityData = await reliabilityRes.json();
         // Downsample prices for chart performance (every 5th point)
         const sampled = pricesData.data.filter((_, i) => i % 5 === 0);
 
         setPrices(sampled);
         setChangepoints(cpData.changepoints || []);
-        setEvents(eventsData.data || []);
+       setEvents(eventsData.data || []);
         setSummary(summaryData);
+        setReliability(reliabilityData.data || []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -189,7 +214,14 @@ export default function App() {
           ))}
         </div>
       </section>
-
+<section className="cp-panel">
+        <h2 className="panel-title">Model Reliability &mdash; Convergence Diagnostics</h2>
+        <div className="cp-grid">
+          {reliability.map((item) => (
+            <ReliabilityBadge key={item.label} item={item} />
+          ))}
+        </div>
+      </section>
       <section className="events-panel">
         <h2 className="panel-title">Full Event Timeline ({events.length} events)</h2>
         <div className="events-table-wrap">
