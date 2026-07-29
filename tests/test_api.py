@@ -132,7 +132,9 @@ class TestSummaryEndpoint:
         data = response.get_json()
         assert data['date_range']['start'] == '1987-05-21'
         assert data['date_range']['end'] == '2022-09-30'
-        class TestReliabilityEndpoint:
+
+
+class TestReliabilityEndpoint:
     def test_reliability_returns_200(self, client):
         response = client.get('/api/reliability')
         assert response.status_code == 200
